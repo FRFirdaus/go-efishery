@@ -1,0 +1,51 @@
+# This is a sample build configuration for Go.
+# Check our guides at https://confluence.atlassian.com/x/5Q4SMw for more examples.
+# Only use spaces to indent your .yml configuration.
+# -----
+# You can specify a custom docker image from Docker Hub as your build environment.
+image: golang
+
+definitions:
+# Database service available on bitbucket pipeline
+# https://support.atlassian.com/bitbucket-cloud/docs/databases-and-service-containers/
+  services: 
+    postgres: 
+      image: postgres 
+      variables: 
+        POSTGRES_DB: 'postgres' 
+        POSTGRES_USER: 'postgres'
+        POSTGRES_PASSWORD: '12345678'
+# # https://nsq.io/deployment/docker.html
+#     nsqlookupd:
+#       image: nsqio/nsq
+#       command: /nsqlookupd
+#       ports:
+#         - "4161:4161"
+#         - "4160:4160"
+#     nsqd:
+#       image: nsqio/nsq
+#       command: /nsqd --lookupd-tcp-address=nsqlookupd:4160
+#       depends_on:
+#         - nsqlookupd
+#       ports:
+#         - "4151:4151"
+#         - "4150:4150"
+  steps:
+    - step : &Testing
+        name: Testing
+        script: 
+          # run unit test
+          # - go test -short $(go list ./...)
+          # check racy code
+          # currently disable cz timeout on pipeline
+          # - go test -race -short $(go list ./...)
+          # benchmark
+          - go test -run=Bench -bench=.  "./libs/broker/pubsub"
+        services: 
+          - postgres
+          # - nsqd
+          # - nsqlookupd
+pipelines:
+  pull-requests:
+    '**':
+      - step: *Testing
